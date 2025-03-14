@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Fire Simulator</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <canvas id="overlayCanvas"></canvas>
+    <div id="controlSettings">
+        <button id="playButton" class="button"></button>
+        <button id="stepButton" class="button"></button>
+        <button id="simulateButton" class="button"></button>
+        <button id="slowmodeButton" class="button"></button>
+        <button id="menuButton" class="button"></button>
+        <button id="screenshotButton" class="button"></button>
+        <button id="resetButton" class="button"></button>
+    </div>
+    <dialog id="modalContainer">
+        <div id="modalTitle"></div>
+        <div id="modalContent"></div>
+        <div id="modalButtons" style="display: flex; justify-content: center;">
+            <button id="modalYes" class="modalButton button">Yes</button>
+            <button id="modalNo" class="modalButton button">No</button>
+            <button id="modalOk" class="modalButton button">Ok</button>
+        </div>
+    </dialog>
+    <script src="game.js" type="module" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,829 @@
+/* helper classes: hidden, expanded, disabled */
+
+@font-face {
+    font-family: "Noto Sans";
+    src: url(./fonts/NotoSans-Regular.ttf);
+}
+
+body {
+    margin: 0px;
+    overflow: hidden;
+    --border-size: 1;
+    font-family: "Noto Sans";
+    /* font-family: "Source Code Pro"; */
+}
+
+* {
+    font-family: "Noto Sans";
+    box-sizing: content-box;
+    /* box-sizing: border-box; */
+}
+button {
+    appearance: none;
+    padding: 0px;
+}
+
+#menuContainer, #gameContainer, #transitionContainer {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+}
+
+#canvas,
+#overlayCanvas {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+}
+
+#sidebar {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    display: flex;
+    width: 100vw;
+    align-items: flex-end;
+}
+
+#controlSettings {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    display: grid;
+    padding: 4px;
+    background-color: #00000066;
+    border-right: 2px solid black;
+    border-top: 2px solid black;
+}
+
+.button {
+    width: 48px;
+    height: 48px;
+    margin: 4px;
+    border: none;
+    background-color: transparent;
+    background-image: url("/img/buttons.png");
+    background-size: 1500% 400%;
+    background-position: 0% 0%;
+    image-rendering: pixelated;
+    cursor: pointer;
+    transition: 50ms linear transform;
+    transform: translateY(0px);
+}
+
+.button:hover {
+    transform: translateY(-2px);
+}
+.button:active {
+    transform: translateY(2px);
+    background-position: 0% 300%;
+}
+
+#menuContainer {
+    background-color: black;
+    opacity: 1;
+    transition: 1000ms linear opacity;
+}
+#menuTitle {
+    position: absolute;
+    left: 50vw;
+    top: 25vh;
+    height: 10vh;
+    image-rendering: pixelated;
+    transform: translate(-50%, -50%);
+}
+#menuCanvas {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    /* transition: 1500ms cubic-bezier(0.3, 0, 0.3, 1) transform;
+    transform: translateY(15vh); */
+}
+#titleContainer {
+    transition: 500ms cubic-bezier(0.5, 0, 0.5, 1) transform;
+    transform: translateX(0px);
+}
+.menuButton {
+    position: absolute;
+    left: 50vw;
+    width: 50vw;
+    border: 4px solid white;
+    border-style: outset;
+    box-shadow: 0px 0px 5px #ffffff;
+    background-color: #ffffff33;
+    color: white;
+    font-size: 3.5vh;
+    cursor: pointer;
+    transition: 50ms linear transform;
+    transform: translate(-50%, -50%);
+}
+.menuButton:hover {
+    transform: translate(-50%, -50%) translateY(-2px);
+}
+.menuButton:active {
+    border-style: inset;
+    transform: translate(-50%, -50%) translateY(2px);
+}
+#sandboxButtonContainer, #puzzlesButtonContainer {
+    transition: 1500ms cubic-bezier(0.2, 0.2, 0, 1) transform;
+    transform: translateY(50vh);
+}
+#sandboxButton {
+    top: 60vh;
+}
+#puzzlesButton {
+    top: 70vh;
+}
+
+#puzzlesContainer {
+    position: absolute;
+    left: 50vw;
+    top: 50vh;
+    width: calc(100vw - 200px);
+    height: calc(100vh - 200px);
+    border: 4px solid white;
+    background-color: lightgray;
+    transition: 500ms cubic-bezier(0.5, 0, 0.5, 1) transform;
+    transform: translate(-50%, -50%) translateX(100vw);
+}
+#puzzlesTitle {
+    font-size: 40px;
+    text-align: center;
+}
+.puzzlesCanvas {
+    border: 2px solid black;
+    margin: 4px;
+}
+#puzzlesCloseButton {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    transform: translate(-50%, -50%);
+    background-position: -100% -200%;
+}
+#puzzlesCloseButton:hover {
+    transform: translate(-50%, -50%) translateY(-2px);
+}
+#puzzlesCloseButton:active {
+    background-position: -100% -300%;
+    transform: translate(-50%, -50%) translateY(2px);
+}
+
+#transitionTop, #transitionBottom {
+    width: 100vw;
+    height: 50vh;
+    background-color: black;
+    transition: 1000ms cubic-bezier(0.5, 0, 0.5, 1) transform;
+}
+#transitionTop {
+    transform: translateX(100vw);
+}
+#transitionBottom {
+    top: 50vh;
+    transform: translateX(-100vw);
+}
+
+#playButton {
+    grid-row: 2 / 3;
+    grid-column: 1 / 2;
+    background-position: 0% 0%;
+}
+#playButton:active {
+    background-position: 0% 300%;
+}
+#stepButton {
+    grid-row: 2;
+    grid-column: 2 / 3;
+    background-position: -100% 0%;
+}
+#stepButton:active {
+    background-position: -100% 300%;
+}
+#simulateButton {
+    grid-row: 2;
+    grid-column: 3 / 4;
+    background-position: -200% 0%;
+}
+#simulateButton:active {
+    background-position: -200% 300%;
+}
+#slowmodeButton {
+    grid-row: 2;
+    grid-column: 4 / 5;
+    background-position: -300% 0%;
+}
+#slowmodeButton:active {
+    background-position: -300% 300%;
+}
+
+.pauseButton {
+    background-position: 0% 200% !important;
+}
+.pauseButton:active {
+    background-position: 0% 100% !important;
+}
+
+#menuButton {
+    grid-row: 1;
+    grid-column: 1 / 2;
+    background-position: -500% 0%;
+}
+#menuButton:active {
+    background-position: -500% 300%;
+}
+#screenshotButton {
+    grid-row: 1;
+    grid-column: 2 / 3;
+    background-position: -600% 0%;
+}
+#screenshotButton:active {
+    background-position: -600% 300%;
+}
+#resetButton {
+    grid-row: 1;
+    grid-column: 3 / 4;
+    background-position: -400% 0%;
+}
+#resetButton:active {
+    background-position: -400% 300%;
+}
+
+#saveCodeSettings {
+    position: absolute;
+    left: 0px;
+    bottom: 128px;
+    width: 200px; /* temp values */
+    height: 200px;
+    padding: 4px;
+    background-color: #00000066;
+    border-right: 2px solid black;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    transition: 200ms ease transform;
+    transform: translateX(0px);
+}
+#saveCodeSettings.hidden {
+    transform: translateX(calc(-100% - var(--border-size) * 2));
+}
+#saveCodeSettingsToggle {
+    position: absolute;
+    left: 100%;
+    bottom: calc(var(--border-size) * -2);
+    width: 33px;
+    height: 33px;
+    background-color: #00000066;
+    border: 2px solid black;
+    cursor: pointer;
+}
+#saveCodeSettingsToggle div {
+    width: 33px;
+    height: 33px;
+    background-image: url("/img/arrow.png");
+    background-size: 100%;
+    image-rendering: pixelated;
+    transition: 200ms ease transform;
+    transform: scaleX(-1);
+}
+#saveCodeSettings.hidden #saveCodeSettingsToggle div {
+    transform: scaleX(1);
+}
+
+#downloadSaveCodeButton {
+    background-position: -800% 0%;
+}
+#downloadSaveCodeButton:active {
+    background-position: -800% 300%;
+}
+#uploadSaveCodeButton {
+    background-position: -900% 0%;
+}
+#uploadSaveCodeButton:active {
+    background-position: -900% 300%;
+}
+#generateSaveCodeButton {
+    background-position: -1000% 0%;
+}
+#generateSaveCodeButton:active {
+    background-position: -1000% 300%;
+}
+#saveCodeText {
+    color: white;
+}
+#saveCode {
+    appearance: none;
+    border: 2px solid black;
+    resize: none;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#blueprintSettingsContainer {
+    position: absolute;
+    left: 0px;
+    /* bottom: calc(208px + var(--border-size) * 2); */
+    bottom: 208px;
+    width: 208px; /* temp values */
+    /* height: 208px; */
+    height: calc(208px + var(--border-size) * 2);
+    background-color: #00000066;
+    border-right: 2px solid black;
+    border-top: 2px solid black;
+    transition: 200ms ease height;
+    overflow: hidden;
+}
+#blueprintSettingsContainer.hidden {
+    height: 0px;
+}
+#blueprintSettings {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    /* bottom: 0px; */
+    /* bottom: calc(208px + var(--border-size) * 2); */
+    /* top: calc(-100% - var(--border-size) * 2); */
+    width: 200px; /* temp values */
+    height: 200px;
+    padding: 4px;
+}
+#blueprintSettingsToggle {
+    position: absolute;
+    left: calc(var(--border-size) * -2);
+    top: calc(var(--border-size) * -4 - 33px);
+    width: 33px;
+    height: 33px;
+    background-color: #00000066;
+    border: 2px solid black;
+    cursor: pointer;
+    transition: 200ms ease transform;
+    transform: translateY(calc(-208px - var(--border-size) * 2));
+}
+#blueprintSettingsToggle.hidden {
+    transform: translateY(0px);
+}
+#blueprintSettingsToggle div {
+    width: 33px;
+    height: 33px;
+    background-image: url("/img/arrow.png");
+    background-size: 100%;
+    image-rendering: pixelated;
+    transition: 200ms ease transform;
+    transform: rotate(90deg) scaleX(1);
+}
+#blueprintSettingsToggle.hidden div {
+    transform: rotate(90deg) scaleX(-1);
+}
+
+#saveBlueprintButton {
+    width: 144px;
+    height: 30px;
+    margin: 2px;
+    background-size: 500% 640%;
+    background-position: -400% 0%;
+}
+#saveBlueprintButton:active {
+    background-position: -400% -100%;
+}
+#uploadBlueprintButton {
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    background-size: 2400% 640%;
+    background-position: -2200% -200%;
+}
+#uploadBlueprintButton:active {
+    background-position: -2200% -300%;
+}
+#blueprintsListText {
+    color: white;
+}
+#blueprintsList {
+    border: 2px solid black;
+    padding: 1px;
+    flex-grow: 1;
+    overflow-y: scroll;
+}
+.blueprint {
+    /* height: 50px; */
+    margin: 1px;
+    border: 2px solid black;
+}
+.blueprintImg {
+    border: 2px solid black;
+    margin: 1px;
+    width: 52px;
+    flex-shrink: 0;
+    /* aspect-ratio: 1; */
+    background-size: contain;
+}
+.blueprintName {
+    /* color: white; */
+    appearance: none;
+    border: 2px solid black;
+    resize: none;
+    /* margin-left: 4px; */
+    margin: 2px;
+    width: 100%;
+    font-family: 'Courier New', Courier, monospace;
+}
+.blueprintCopyButton {
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    background-size: 2400% 640%;
+    background-position: -2000% -200%;
+}
+.blueprintCopyButton:active {
+    background-position: -2000% -300%;
+}
+.blueprintDownloadButton {
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    background-size: 2400% 640%;
+    background-position: -2100% -200%;
+}
+.blueprintDownloadButton:active {
+    background-position: -2100% -300%;
+}
+.blueprintDeleteButton {
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    background-size: 2400% 640%;
+    background-position: -2300% -200%;
+}
+.blueprintDeleteButton:active {
+    background-position: -2300% -300%;
+}
+
+#history {
+    /* overflow-x: scroll; */
+    /* height: fit-content; */
+    /* flex-grow: 1;
+    background: orange; */
+}
+
+#pixelPicker {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    padding: 4px;
+    display: flex;
+    flex-direction: row-reverse;
+    /*padding: 2px;*/
+    background-color: #00000066;
+    border-left: 2px solid black;
+    border-top: 2px solid black;
+}
+
+.pixelGroup {
+    /* display: flex;
+    height: 56px;
+    max-width: 100vw; */
+    /* flex-direction: row-reverse; */
+    /* align-items: flex-end; */
+    /* padding: 2px; */
+    /* mix-blend-mode: difference; */
+    /* background-color: #00000066; */
+}
+
+.pixelGroupImg {
+    width: 48px;
+    height: 48px;
+    margin: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: 50ms linear transform;
+    transform: translateY(0px);
+    /*background-color: green;*/
+    /* background-color: black; */
+}
+
+.pixelSubgroups {
+    position: absolute;
+    right: 0px;
+    bottom: 64px;
+    display: flex;
+    height: 64px;
+    max-width: 100vw;
+    flex-direction: row-reverse;
+    align-items: flex-end;
+    padding: 0px 4px;
+    /* background-color: #00000033; */
+    /* background-color: #000000; */
+    background-color: #00000044;
+    border-left: 2px solid black;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    /* isolation: isolate; */
+    opacity: 0;
+    transition: opacity linear 200ms;
+}
+
+.pixelGroupSelected .pixelSubgroups {
+    opacity: 1;
+    /* opacity: 0.5; */
+}
+.pixelGroupSelected .pixelSubgroup {
+    width: 56px;
+    pointer-events: auto;
+}
+
+.pixelSubgroup {
+    display: flex;
+    flex-direction: column-reverse;
+    flex-shrink: 0;
+    width: 0px;
+    transition: 200ms ease width;
+    pointer-events: none;
+    align-items: center;
+}
+
+.pixelSubgroupImg {
+    width: 48px;
+    height: 48px;
+    margin: 8px 4px;
+    transition: 50ms linear transform;
+    flex-shrink: 0;
+    cursor: pointer;
+    transform: translateY(0px);
+}
+.pixelSubgroupImg.disabled {
+    opacity: 0.5;
+}
+
+.pixelSubgroup:hover .pixel {
+    height: 56px;
+}
+
+.pixel {
+    width: 64px;
+    height: 0px;
+    padding: 0px;
+    transition: 200ms ease height, 200ms ease padding;
+    flex-shrink: 0;
+    background-color: #00000044;
+    /* background-blend-mode: difference; */
+    /* mix-blend-mode: multiply; */
+    border-left: 2px solid black;
+    border-right: 2px solid black;
+    overflow: hidden;
+}
+/* .pixel:first-child {
+    border-top: 2px solid black;
+} */
+.pixelSubgroup:hover .pixel:nth-child(2) {
+    /* height: 64px; */
+    /* padding-bottom: 8px; */
+    padding-bottom: 8px;
+    border-bottom: 2px solid black;
+}
+.pixel:last-child {
+    border-top: 2px solid black;
+}
+.pixelImg {
+    position: relative;
+    width: 48px;
+    /* height: 48px; */
+    height: calc(100% - 8px);
+    /* mix-blend-mode: difference; */
+    /* height: 85.71%; */
+    /* margin: 14.29%; */
+    margin: 8px;
+    margin-bottom: 0px;
+    transition: 200ms ease outline, 50ms linear transform;
+    cursor: pointer;
+    transform: translateY(0px);
+    background-size: 100% 100%;
+    outline: 0px solid white;
+}
+.pixelImg.disabled {
+    opacity: 0.5;
+}
+/* .pixel:nth-child(2) .pixelImg {
+    height: calc(100% - 16px);
+    margin-bottom: 8px;
+} */
+.pixelAmount {
+    position: absolute;
+    bottom: 0px;
+    right: 2px;
+    pointer-events: none;
+}
+.pixelGroupImg:hover, .pixelSubgroupImg:hover, .pixelImg:hover {
+    transform: translateY(-4px);
+    outline: 2px solid white;
+}
+.pixelSubgroup:hover .pixelImg {
+    transition: 50ms linear transform;
+}
+
+.pixelSelected {
+    outline: 0px solid gold;
+}
+.pixelGroupSelected .pixelGroupImg, .pixelSubgroup:hover .pixelSelected, .pixelSubgroupImg.pixelSelected {
+    outline: 4px solid gold;
+}
+.pixelGroupSelected .pixelGroupImg:hover, .pixelSubgroup:hover .pixelSelected:hover, .pixelSubgroupImg.pixelSelected:hover {
+    outline: 4px solid gold;
+}
+
+#puzzleInformation {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    /* width: 200px;
+    height: 200px; */
+    padding: 4px;
+    background-color: #00000066;
+    border-left: 2px solid black;
+    border-bottom: 2px solid black;
+}
+#puzzleTitle {
+    font-size: 20px;
+    color: white;
+}
+#puzzleSubtitle {
+    font-size: 12px;
+    color: white;
+    margin-top: -2px;
+}
+#puzzleObjectives {
+    position: absolute;
+    right: 0px;
+    top: calc(50px + var(--border-size));
+    padding: 4px;
+    background-color: #00000066;
+    border-left: 2px solid black;
+    border-bottom: 2px solid black;
+}
+.puzzleObjective {
+    color: white;
+    text-align: center;
+}
+.puzzleObjectiveProgress {
+    position: relative;
+    height: 20px;
+    width: 100%;
+    border: 2px solid black;
+    text-align: center;
+}
+.puzzleObjectiveProgressBackground {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 50%;
+    height: 100%;
+    background-color: green;
+    transition: 200ms ease width;
+}
+.puzzleObjectiveProgressText {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#tooltip {
+    position: absolute;
+    opacity: 0;
+    background-color: #ffffffaa;
+    border: 2px solid black;
+    /* border-radius: 8px; */
+    pointer-events: none;
+    /* max-width: 200px;
+    min-width: min-content; */
+    max-width: max-content;
+    width: 200px;
+}
+#tooltipName {
+    /* border-bottom: 2px solid black; */
+    font-weight: bold;
+}
+#tooltipName, #tooltipDescription {
+    padding: 4px;
+}
+
+
+
+/* #modalContainer {
+    position: absolute;
+    width: 100vw;
+    height: 100vh; */
+    /* background-color: rgba(0, 0, 0, 0.5); */
+    /* background-color: #00000066; */
+    /* background-color: transparent;
+    opacity: 0;
+    transition: 300ms linear opacity, 300ms linear display allow-discrete, 300ms linear overlay allow-discrete; */
+    /* backdrop-filter: blur(4px); */
+    /* transition-behavior: allow-discrete; */
+    /* pointer-events: none; */
+/* } */
+/* #modalContainer[open] {
+    opacity: 1;
+}
+#modalBody {
+    position: absolute;
+    bottom: 100vh;
+    left: calc(25vw - 20px);
+    width: 50vw;
+    padding: 4px 4px;
+    border: 2px solid black; */
+    /* background-color: lightgray; */
+    /* background-color: #ffffff66;
+    text-align: center;
+    transition: 400ms ease-in-out transform;
+    transform: translateY(0vh);
+} */
+#modalContainer {
+    position: absolute;
+    left: 50vw;
+    bottom: 100vh;
+    width: 50vw;
+    padding: 4px 4px;
+    border: 2px solid black;
+    background-color: #ffffff66;
+    text-align: center;
+    opacity: 0;
+    transition: 400ms ease-in-out transform, 300ms linear opacity, 300ms linear display allow-discrete, 300ms linear overlay allow-discrete;
+    transform: translate(-50%, 0vh);
+}
+#modalContainer[open] {
+    opacity: 1;
+    transform: translate(-50%, 50vh);
+}
+/* #modalContainer[open] #modalBody {
+    transform: translateY(calc(50vh + 50%));
+} */
+@starting-style {
+    /* #modalContainer[open] {
+        opacity: 0;
+    }
+    #modalContainer[open] #modalBody {
+        transform: translateY(0vh);
+    } */
+    #modalContainer[open] {
+        opacity: 0;
+        transform: translate(-50%, 0vh);
+    }
+}
+#modalContainer::backdrop {
+  background-color: #00000000;
+  transition:
+    display 0.3s allow-discrete,
+    overlay 0.3s allow-discrete,
+    background-color 0.3s;
+  /* Equivalent to
+  transition: all 0.7s allow-discrete; */
+}
+
+#modalContainer[open]::backdrop {
+    background-color: #00000066;
+}
+
+/* This starting-style rule cannot be nested inside the above selector
+because the nesting selector cannot represent pseudo-elements. */
+
+@starting-style {
+    #modalContainer[open]::backdrop {
+        background-color: #00000000;
+    }
+}
+#modalTitle, #modalContent {
+    width: calc(100% - 16px);
+    margin: 8px;
+}
+#modalTitle {
+    font-size: 32px;
+    font-weight: bold;
+}
+#modalContent {
+    font-size: 14px;
+}
+.modalButton {
+    /* display: flex;
+    align-items: center; */
+    width: 96px;
+    background-size: 750% 400%;
+    /* font-family: "Noto Sans"; */
+    font-family: "Source Code Pro";
+    font-weight: 500;
+    font-size: 24px;
+}
+#modalYes {
+    background-position: -400% -200%;
+}
+#modalYes:active {
+    background-position: -400% -300%;
+}
+#modalNo {
+    background-position: -300% -200%;
+}
+#modalNo:active {
+    background-position: -300% -300%;
+}
+#modalOk {
+    background-position: -200% -200%;
+}
+#modalOk:active {
+    background-position: -200% -300%;
+}
