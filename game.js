@@ -26,7 +26,7 @@ window.onresize();
 const SPD_X = 0;
 const SPD_Y = 1;
 const TEMPERATURE = 2;
-const UPDATED = 3;
+const ID = 3;
 
 let grid = new Float32Array();
 let gridWidth = 128;
@@ -234,31 +234,9 @@ function isKeybindJustPressed(keybind) {
 
 let mouseX = 0;
 let mouseY = 0;
-let mouseRawX = 0;
-let mouseRawY = 0;
 
 let brushSize = 1 + 4;
 let brushPixel = 1;
-let lastBrushX = 0;
-let lastBrushY = 0;
-
-function setBrushPixel(pixel) {
-    brushPixel = pixel;
-};
-
-const BRUSH = 0;
-const SELECTING = 1;
-const SELECTED = 2;
-const PASTING = 3;
-
-let selectionState = BRUSH;
-let selectionX = 0;
-let selectionY = 0;
-let selectionWidth = 0;
-let selectionHeight = 0;
-let selectionGrid = null;
-let selectionGridWidth = 0;
-let selectionGridHeight = 0;
 
 function drawMouse(ctx) {
     let brushX = Math.floor(cameraX + mouseX / cameraScale);
@@ -274,474 +252,39 @@ function drawMouse(ctx) {
     ctx.setLineDash([]);
     ctx.resetTransform();
 };
-function updateMouse() {
-    let brushX = Math.floor(cameraX + mouseX / cameraScale);
-    let brushY = Math.floor(cameraY + mouseY / cameraScale);
-    // this is a lot of spaghetti
-    if (isKeybindJustPressed("End Selection") || isKeybindJustPressed("Secondary Action")) {
-        if (selectionState == SELECTING || selectionState == SELECTED || selectionState == PASTING) {
-            selectionState = BRUSH;
-            controls["RMB"] = false;
-        }
-    }
-    else if (isKeybindPressed("Begin Selection") && isKeybindJustPressed("Main Action")) {
-        if (selectionState == BRUSH) {
-            selectionState = SELECTING;
-            selectionX = brushX;
-            selectionY = brushY;
-        }
-    }
-    else {
-        if (isKeybindJustPressed("Paste Selection")) {
-            if (selectionGrid != null) {
-                selectionState = PASTING;
-                selectionWidth = selectionGridWidth;
-                selectionHeight = selectionGridHeight;
-            }
-        }
-        if (selectionState == SELECTING && !isKeybindPressed("Main Action")) {
-            selectionState = SELECTED;
-            let minX = Math.min(selectionX, brushX);
-            let maxX = Math.max(selectionX, brushX);
-            let minY = Math.min(selectionY, brushY);
-            let maxY = Math.max(selectionY, brushY);
 
-            selectionX = minX;
-            selectionY = minY;
-            selectionWidth = maxX - minX + 1;
-            selectionHeight = maxY - minY + 1;
-        }
-    }
-    if (selectionState == BRUSH) {
-        function raytrace(x1, y1, x2, y2, size, action) {
-            let slope = (y2 - y1) / (x2 - x1);
-            if (slope == 0) {
-                if (y1 <= -size || y1 >= gridHeight + size) {
-                    return;
-                }
-                let minX = Math.min(x1, x2);
-                let maxX = Math.max(x1, x2);
-                let start = Math.max(1 - size, minX);
-                let end = Math.min(gridWidth - 2 + size, maxX);
-                for (let x = start; x <= end; x++) {
-                    if (!action(Math.max(x - size + 1, 0), Math.max(y1 - size + 1, 0), Math.min(x + size - 1, gridWidth - 1), Math.min(y1 + size - 1, gridHeight - 1))) {
-                        return;
-                    }
-                }
-            }
-            else if (!isFinite(slope)) {
-                if (x1 <= -size || x1 >= gridWidth + size) {
-                    return;
-                }
-                let minY = Math.min(y1, y2);
-                let maxY = Math.max(y1, y2);
-                let start = Math.max(1 - size, minY);
-                let end = Math.min(gridHeight - 2 + size, maxY);
-                for (let y = start; y <= end; y++) {
-                    if (!action(Math.max(x1 - size + 1, 0), Math.max(y - size + 1, 0), Math.min(x1 + size - 1, gridWidth - 1), Math.min(y + size - 1, gridHeight - 1))) {
-                        return;
-                    }
-                }
-            }
-            else if (Math.abs(slope) < 1) {
-                let startY = x2 < x1 ? y2 : y1;
-                let endY = x2 < x1 ? y1 : y2;
-                let minX = Math.min(x1, x2);
-                let maxX = Math.max(x1, x2);
-                let start = Math.max(1 - size, minX);
-                if (slope < 0) {
-                    start = Math.max(start, Math.ceil((gridWidth - 2 + size + 0.5 - startY) / slope) + minX);
-                }
-                else {
-                    start = Math.max(start, Math.ceil((1 - size - 0.5 - startY) / slope) + minX);
-                }
-                let end = Math.min(gridWidth - 2 + size, maxX);
-                if (slope < 0) {
-                    end = Math.min(end, maxX - Math.ceil((endY - (1 - size - 0.5)) / slope));
-                }
-                else {
-                    end = Math.min(end, maxX - Math.ceil((endY - (gridWidth - 2 + size) - 0.5) / slope));
-                }
-                let lastY = 0;
-                for (let x = start; x <= end; x++) {
-                    let y = Math.round(slope * (x - minX)) + startY;
-                    if (x == start) {
-                        if (!action(Math.max(x - size + 1, 0), Math.max(y - size + 1, 0), Math.min(x + size - 1, gridWidth - 1), Math.min(y + size - 1, gridHeight - 1))) {
-                            return;
-                        }
-                    }
-                    else {
-                        if (!action(Math.max(x + size - 1, 0), Math.max(y - size + 1, 0), Math.min(x + size - 1, gridWidth - 1), Math.min(y + size - 1, gridHeight - 1))) {
-                            return;
-                        }
-                        if (y != lastY) {
-                            if (!action(Math.max(x - size + 1, 0), Math.min(Math.max(y + (size - 1) * (y - lastY), 0), gridHeight - 1), Math.min(x + size - 1, gridWidth - 1), Math.min(Math.max(y + (size - 1) * (y - lastY), 0), gridHeight - 1))) {
-                                return;
-                            }
-                        }
-                    }
-                    lastY = y;
-                }
-            }
-            else {
-                slope = (x2 - x1) / (y2 - y1);
-                let startX = y2 < y1 ? x2 : x1;
-                let endX = y2 < y1 ? x1 : x2;
-                let minY = Math.min(y1, y2);
-                let maxY = Math.max(y1, y2);
-                let start = Math.max(1 - size, minY);
-                if (slope < 0) {
-                    start = Math.max(start, Math.ceil((gridHeight - 2 + size + 0.5 - startX) / slope) + minY);
-                }
-                else {
-                    start = Math.max(start, Math.ceil((1 - size - 0.5 - startX) / slope) + minY);
-                }
-                let end = Math.min(gridHeight - 2 + size, maxY);
-                if (slope < 0) {
-                    end = Math.min(end, maxY - Math.ceil((endX - (1 - size - 0.5)) / slope));
-                }
-                else {
-                    end = Math.min(end, maxY - Math.ceil((endX - (gridHeight - 2 + size) - 0.5) / slope));
-                }
-                let lastX = 0;
-                for (let y = start; y <= end; y++) {
-                    let x = Math.round(slope * (y - minY)) + startX;
-                    if (y == start) {
-                        if (!action(Math.max(x - size + 1, 0), Math.max(y - size + 1, 0), Math.min(x + size - 1, gridWidth - 1), Math.min(y + size - 1, gridHeight - 1))) {
-                            return;
-                        }
-                    }
-                    else {
-                        if (!action(Math.max(x - size + 1, 0), Math.max(y + size - 1, 0), Math.min(x + size - 1, gridWidth - 1), Math.min(y + size - 1, gridHeight - 1))) {
-                            return;
-                        }
-                        if (x != lastX) {
-                            if (!action(Math.min(Math.max(x + (size - 1) * (x - lastX), 0), gridWidth - 1), Math.max(y - size + 1, 0), Math.min(Math.max(x + (size - 1) * (x - lastX), 0), gridWidth - 1), Math.min(y + size - 1, gridHeight - 1))) {
-                                return;
-                            }
-                        }
-                    }
-                    lastX = x;
-                }
-            }
-        }
-        if (currentPuzzle == null) {
-            if (isKeybindPressed("Secondary Action")) {
-                if (pixels[brushPixel].id == "fire") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                addFire(x, y, 0);
-                                // addUpdatedChunk2(x, y);
-                            }
-                        }
-                        return true;
-                    });
-                }
-                else if (pixels[brushPixel].id == "placement_restriction") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] -= grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] & 1;
-                            }
-                        }
-                        return true;
-                    });
-                }
-                else {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                addPixel(x, y, 0);
-                                // addUpdatedChunk2(x, y);
-                            }
-                        }
-                        return true;
-                    });
-                }
-            }
-            else if (isKeybindPressed("Main Action")) {
-                if (pixels[brushPixel].id == "fire") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                addFire(x, y, 1);
-                                // addUpdatedChunk2(x, y);
-                            }
-                        }
-                        return true;
-                    });
-                }
-                else if (pixels[brushPixel].id == "placement_restriction") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] += 1 - grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] & 1;
-                            }
-                        }
-                        return true;
-                    });
-                }
-                else {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                addPixel(x, y, brushPixel);
-                                // addUpdatedChunk2(x, y);
-                                grid[(x + y * gridWidth) * gridStride + UPDATED] = 0;
-                            }
-                        }
-                        return true;
-                    });
-                }
-            }
-        }
-        else {
-            if (isKeybindPressed("Secondary Action")) {
-                if (pixels[brushPixel].id == "fire") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                if (grid[(x + y * gridWidth) * gridStride + ON_FIRE] == 1) {
-                                    pixelInventory[brushPixel] += 1;
-                                }
-                                addFire(x, y, 0);
-                                // addUpdatedChunk2(x, y);
-                            }
-                        }
-                        return true;
-                    });
-                    pixelInventoryUpdates[brushPixel] = true;
-                    updatePixelInventory();
-                }
-                else if (pixels[brushPixel].id == "placement_restriction") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] -= grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] & 1;
-                            }
-                        }
-                        return true;
-                    });
-                }
-                else {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                let index = (x + y * gridWidth) * gridStride;
-                                if (grid[index + ID] != 0) {
-                                    pixelInventory[grid[index + ID]] += 1;
-                                    pixelInventoryUpdates[grid[index + ID]] = true;
-                                }
-                                addPixel(x, y, 0);
-                                // addUpdatedChunk2(x, y);
-                                grid[index + UPDATED] = 0;
-                            }
-                        }
-                        return true;
-                    });
-                    updatePixelInventory();
-                }
-            }
-            else if (isKeybindPressed("Main Action")) {
-                if (pixels[brushPixel].id == "fire") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                if (pixelInventory[brushPixel] == 0) {
-                                    return false;
-                                }
-                                if (grid[(x + y * gridWidth) * gridStride + ON_FIRE] == 0) {
-                                    pixelInventory[brushPixel] -= 1;
-                                }
-                                addFire(x, y, 1);
-                                // addUpdatedChunk2(x, y);
-                            }
-                        }
-                        return true;
-                    });
-                    pixelInventoryUpdates[brushPixel] = true;
-                    updatePixelInventory();
-                }
-                else if (pixels[brushPixel].id == "placement_restriction") {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] += 1 - grid[(x + y * gridWidth) * gridStride + PUZZLE_DATA] & 1;
-                            }
-                        }
-                        return true;
-                    });
-                }
-                else {
-                    raytrace(lastBrushX, lastBrushY, brushX, brushY, brushSize, (x1, y1, x2, y2) => {
-                        for (let y = y1; y <= y2; y++) {
-                            for (let x = x1; x <= x2; x++) {
-                                if (pixelInventory[brushPixel] == 0) {
-                                    return false;
-                                }
-                                let index = (x + y * gridWidth) * gridStride;
-                                if (grid[index + ID] != 0) {
-                                    pixelInventory[grid[index + ID]] += 1;
-                                    pixelInventoryUpdates[grid[index + ID]] = true;
-                                }
-                                addPixel(x, y, brushPixel);
-                                // addUpdatedChunk2(x, y);
-                                grid[index + UPDATED] = 0;
-                                pixelInventory[brushPixel] -= 1;
-                            }
-                        }
-                        return true;
-                    });
-                    pixelInventoryUpdates[brushPixel] = true;
-                    updatePixelInventory();
-                }
-            }
-        }
-    }
-    else if (selectionState == SELECTING) {
-    }
-    else if (selectionState == SELECTED) {
-        if (isKeybindJustPressed("Copy Selection")) {
-            let array = [];
-            for (let y = Math.max(selectionY, 0); y < Math.min(selectionY + selectionHeight, gridHeight); y++) {
-                for (let x = Math.max(selectionX, 0); x < Math.min(selectionX + selectionWidth, gridWidth); x++) {
-                    for (let i = 0; i < gridStride; i++) {
-                        if (i == PUZZLE_DATA) {
-                            array.push(0);
-                        }
-                        else {
-                            array.push(grid[(x + y * gridWidth) * gridStride + i]);
-                        }
-                    }
-                }
-            }
-            selectionGrid = new Float32Array(array);
-            selectionGridWidth = Math.min(selectionX + selectionWidth, gridWidth) - Math.max(selectionX, 0);
-            selectionGridHeight = Math.min(selectionY + selectionHeight, gridHeight) - Math.max(selectionY, 0);
-        }
-        else if (isKeybindJustPressed("Cut Selection")) {
-            let array = [];
-            for (let y = Math.max(selectionY, 0); y < Math.min(selectionY + selectionHeight, gridHeight); y++) {
-                for (let x = Math.max(selectionX, 0); x < Math.min(selectionX + selectionWidth, gridWidth); x++) {
-                    for (let i = 0; i < gridStride; i++) {
-                        if (i == PUZZLE_DATA) {
-                            array.push(0);
-                        }
-                        else {
-                            array.push(grid[(x + y * gridWidth) * gridStride + i]);
-                        }
-                    }
-                    addPixel(x, y, 0);
-                    addFire(x, y, 0);
-                    // addUpdatedChunk2(x, y);
-                }
-            }
-            selectionGrid = new Float32Array(array);
-            selectionGridWidth = Math.min(selectionX + selectionWidth, gridWidth) - Math.max(selectionX, 0);
-            selectionGridHeight = Math.min(selectionY + selectionHeight, gridHeight) - Math.max(selectionY, 0);
+let tooltip = document.getElementById("tooltip");
+let tooltipName = document.getElementById("tooltipName");
+let tooltipDescription = document.getElementById("tooltipDescription");
 
-            selectionState = PASTING;
-            selectionWidth = selectionGridWidth;
-            selectionHeight = selectionGridHeight;
-        }
+function showTooltip(name, description) {
+    tooltip.style.opacity = "1";
+    tooltipName.innerHTML = name;
+    tooltipDescription.innerHTML = description;
+    // some text transition later
+};
+function hideTooltip() {
+    tooltip.style.opacity = "0";
+};
+function moveTooltip() {
+    tooltip.style.left = mouseX / devicePixelRatio + "px";
+    tooltip.style.right = "unset";
+    tooltip.style.bottom = window.innerHeight - mouseY / devicePixelRatio + "px";
+    // tooltip.style.left = rawMouseX + "px";
+    // tooltip.style.right = "unset";
+    // tooltip.style.top = rawMouseY + "px";
+    // tooltip.style.bottom = "unset";
+    var rect = tooltip.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        tooltip.style.right = window.innerWidth - mouseX / devicePixelRatio + "px";
+        tooltip.style.left = "unset";
     }
-    else if (selectionState == PASTING) {
-        let startX = Math.floor(cameraX + mouseX / cameraScale - (selectionWidth - 1) / 2);
-        let startY = Math.floor(cameraY + mouseY / cameraScale - (selectionHeight - 1) / 2);
-        if (isKeybindPressed("Main Action")) {
-            // pasting settings
-            for (let y = Math.max(startY, 0); y < Math.min(startY + selectionHeight, gridHeight); y++) {
-                for (let x = Math.max(startX, 0); x < Math.min(startX + selectionWidth, gridWidth); x++) {
-                    for (let i = 0; i < gridStride; i++) {
-                        if (i != PUZZLE_DATA) {
-                            grid[(x + y * gridWidth) * gridStride + i] = selectionGrid[(x - startX + (y - startY) * selectionWidth) * gridStride + i];
-                        }
-                    }
-                    addUpdatedChunk(x, y);
-                    // addUpdatedChunk2(x, y);
-                }
-            }
-        }
-        if (isKeybindJustPressed("Rotate Selection")) {
-            let array = [];
-            for (let x = 0; x < selectionGridWidth; x++) {
-                for (let y = selectionGridHeight - 1; y >= 0; y--) {
-                    for (let i = 0; i < gridStride; i++) {
-                        let data = selectionGrid[(x + y * selectionGridWidth) * gridStride + i];
-                        if (i == ID && pixels[data].rotatable) {
-                            let pixel = pixels[data];
-                            data = pixel.rotations[(pixel.rotation + 1) % pixel.rotations.length];
-                        }
-                        array.push(data);
-                    }
-                }
-            }
-            selectionGrid = new Float32Array(array);
-            let width = selectionGridWidth;
-            selectionGridWidth = selectionGridHeight;
-            selectionGridHeight = width;
-
-            selectionWidth = selectionGridWidth;
-            selectionHeight = selectionGridHeight;
-        }
-        if (isKeybindJustPressed("Flip Selection Horizontally")) {
-            let array = [];
-            for (let y = 0; y < selectionGridHeight; y++) {
-                for (let x = selectionGridWidth - 1; x >= 0; x--) {
-                    for (let i = 0; i < gridStride; i++) {
-                        let data = selectionGrid[(x + y * selectionGridWidth) * gridStride + i];
-                        if (i == ID && pixels[data].rotatable) {
-                            let pixel = pixels[data];
-                            switch (pixel.rotations.length) {
-                                case 4:
-                                    if (pixel.rotation % 2 == 0) {
-                                        data = pixel.rotations[(pixel.rotation + 2) % 4];
-                                    }
-                                    break;
-                                case 2:
-                                    if (data == MIRROR_1 || data == MIRROR_2) {
-                                        data = pixel.rotations[(pixel.rotation + 1) % 2];
-                                    }
-                                    break;
-                            }
-                        }
-                        array.push(data);
-                    }
-                }
-            }
-            selectionGrid = new Float32Array(array);
-        }
-        if (isKeybindJustPressed("Flip Selection Vertically")) {
-            let array = [];
-            for (let y = selectionGridHeight - 1; y >= 0; y--) {
-                for (let x = 0; x < selectionGridWidth; x++) {
-                    for (let i = 0; i < gridStride; i++) {
-                        let data = selectionGrid[(x + y * selectionGridWidth) * gridStride + i];
-                        if (i == ID && pixels[data].rotatable) {
-                            let pixel = pixels[data];
-                            switch (pixel.rotations.length) {
-                                case 4:
-                                    if (pixel.rotation % 2 == 1) {
-                                        data = pixel.rotations[(pixel.rotation + 2) % 4];
-                                    }
-                                    break;
-                                case 2:
-                                    if (data == MIRROR_1 || data == MIRROR_2) {
-                                        data = pixel.rotations[(pixel.rotation + 1) % 2];
-                                    }
-                                    break;
-                            }
-                        }
-                        array.push(data);
-                    }
-                }
-            }
-            selectionGrid = new Float32Array(array);
-        }
-    }
-    lastBrushX = brushX;
-    lastBrushY = brushY;
+    // rect = tooltip.getBoundingClientRect();
+    // if (rect.bottom > window.innerHeight) {
+    //     tooltip.style.bottom = (window.innerHeight - rawMouseY) + "px";
+    //     tooltip.style.top = "unset";
+    // }
+    // add the switch sides thing
 };
 
 let cameraX = 0;
@@ -804,8 +347,6 @@ function updateCamera() {
 
 document.onmousemove = (e) => {
     var rect = canvas.getBoundingClientRect();
-    mouseRawX = e.clientX;
-    mouseRawY = e.clientY;
     mouseX = e.clientX * devicePixelRatio;
     mouseY = e.clientY * devicePixelRatio;
 };
@@ -837,19 +378,17 @@ document.onkeydown = (e) => {
     if (controls[key] == false) {
         controls[key] = performance.now();
     }
-    if (selectionState == BRUSH) {
-        for (let i in keybinds["Increment Brush Size"]) {
-            if (key == keybinds["Increment Brush Size"][i].key) {
-                if (isKeybindPressed("Increment Brush Size")) {
-                    brushSize = Math.min(brushSize + 1, Math.ceil((Math.max(gridWidth, gridHeight) + 1) / 2));
-                }
+    for (let i in keybinds["Increment Brush Size"]) {
+        if (key == keybinds["Increment Brush Size"][i].key) {
+            if (isKeybindPressed("Increment Brush Size")) {
+                brushSize = Math.min(brushSize + 1, Math.ceil((Math.max(gridWidth, gridHeight) + 1) / 2));
             }
         }
-        for (let i in keybinds["Decrement Brush Size"]) {
-            if (key == keybinds["Decrement Brush Size"][i].key) {
-                if (isKeybindPressed("Decrement Brush Size")) {
-                    brushSize = Math.max(brushSize - 1, 1);
-                }
+    }
+    for (let i in keybinds["Decrement Brush Size"]) {
+        if (key == keybinds["Decrement Brush Size"][i].key) {
+            if (isKeybindPressed("Decrement Brush Size")) {
+                brushSize = Math.max(brushSize - 1, 1);
             }
         }
     }
@@ -903,12 +442,6 @@ window.onblur = () => {
         controls[i] = false;
     }
 };
-let buttons = document.getElementsByClassName("button");
-for (let i = 0; i < buttons.length; i++) {
-    // buttons[i].onfocus = () => {
-    //     buttons[i].blur();
-    // };
-}
 
 overlayCanvas.addEventListener("wheel", (e) => {
     if (e.ctrlKey) {
@@ -1089,6 +622,88 @@ function drawGrid(ctx) {
     ctx.resetTransform();
 };
 
+let pixelPicker = document.getElementById("pixelPicker");
+let pixelCanvas = document.createElement("canvas");
+let pixelCtx = pixelCanvas.getContext("2d");
+pixelCanvas.width = 48;
+pixelCanvas.height = 48;
+pixelCtx.imageSmoothingEnabled = false;
+pixelCtx.webkitImageSmoothingEnabled = false;
+pixelCtx.mozImageSmoothingEnabled = false;
+let pixels = [
+    {
+        name: "Fire",
+        color: [1, 0.5, 0],
+    },
+    {
+        name: "Concrete",
+        color: [0.5, 0.5, 0.5],
+    },
+    {
+        name: "Wood",
+        draw: function(ctx) {
+            ctx.fillStyle = "rgb(" + this.color[0] * 255 + ", " + this.color[1] * 255 + ", " + this.color[2] * 255 + ")";
+            ctx.fillRect(0, 0, 24, 48);
+            ctx.fillStyle = "rgb(" + this.color[3] * 255 + ", " + this.color[4] * 255 + ", " + this.color[5] * 255 + ")";
+            ctx.fillRect(24, 0, 24, 48);
+        },
+        color: [0.6, 0.4, 0.3, 0.7, 0.5, 0.3],
+    },
+    {
+        name: "Leaves",
+        color: [0.4, 0.85, 0],
+    },
+    {
+        name: "Heater",
+        color: [1.0, 0.8, 0.0],
+    },
+    {
+        name: "Heater 2",
+        color: [1.0, 1.0, 0.0],
+    },
+];
+
+let selectedDiv = null;
+
+for (let i = 0; i < pixels.length; i++) {
+    pixelCtx.clearRect(0, 0, 48, 48);
+    if (pixels[i].draw != null) {
+        pixels[i].draw(pixelCtx);
+    }
+    else {
+        pixelCtx.fillStyle = "rgba(" + pixels[i].color[0] * 255 + ", " + pixels[i].color[1] * 255 + ", " + pixels[i].color[2] * 255 + ", 1)";
+        pixelCtx.fillRect(0, 0, 48, 48);
+    }
+    let data = pixelCanvas.toDataURL("image/png");
+    let pixel = document.createElement("div");
+    pixel.classList.add("pixel");
+    pixelPicker.appendChild(pixel);
+    let pixelImg = document.createElement("div");
+    pixelImg.classList.add("pixelImg");
+    pixelImg.style.backgroundImage = "url(" + data + ")";
+    pixelImg.onclick = function() {
+        selectedDiv.classList.remove("pixelSelected");
+        selectedDiv = pixelImg;
+        selectedDiv.classList.add("pixelSelected");
+        brushPixel = i;
+    };
+    pixelImg.onmouseover = function() {
+        showTooltip(pixels[i].name, pixels[i].description);
+        moveTooltip();
+    };
+    pixelImg.onmouseout = function() {
+        hideTooltip();
+    };
+    pixelImg.onmousemove = function() {
+        moveTooltip();
+    };
+    pixel.appendChild(pixelImg);
+
+    if (selectedDiv == null) {
+        selectedDiv = pixelImg;
+    }
+}
+
 let debug = true;
 let drawUpdatingChunks = false;
 
@@ -1143,7 +758,10 @@ function update() {
     let brushY = Math.floor(cameraY + mouseY / cameraScale);
     if (runState == PLAYING) {
         tick += 1;
-        render(true, new Float32Array([0, 0, 1, 1]), tick, new Float32Array([brushX, brushY, brushSize, controls["LMB"] ? 1 : 0]));
+        render(true, new Float32Array([0, 0, 1, 1]), tick, new Float32Array([brushX, brushY, brushSize, controls["LMB"] ? brushPixel : controls["RMB"] ? -2 : -1]));
+    }
+    else if (frame == 0) {
+        render(false, new Float32Array([0, 0, 1, 1]), tick, new Float32Array([brushX, brushY, brushSize, controls["LMB"] ? 1 : controls["RMB"] ? 2 : 0]));
     }
     overlayCtx.strokeStyle = "rgb(255, 255, 255)";
     overlayCtx.lineWidth = cameraScale;

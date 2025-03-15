@@ -55,24 +55,48 @@ fn compute_main(@builtin(global_invocation_id) pos: vec3<u32>) {
     // }
     for (var i = u32(0); i < grid_size.x; i++) {
         // next_grid[(i + (grid_size.y - 1) * grid_size.x) * stride + 2] += 20.0 / 255.0;
-        // grid[(i + (grid_size.y - 1) * grid_size.x) * stride + 2] += 200.0 / 255.0;
+        grid[(i + (grid_size.y - 1) * grid_size.x) * stride + 2] += 200.0 / 255.0;
         // next_grid[(i + (grid_size.y / 2 - 1) * grid_size.x) * stride + 2] += 2000.0 / 255.0;
         // grid[(i + (grid_size.y - 1) * grid_size.x) * stride + 0] += 200.0 / 255.0;
         // grid[(i + (grid_size.y - 10) * grid_size.x) * stride + 0] += 2000.0 / 255.0;
         // grid[(i + (grid_size.y / 2 - 1) * grid_size.x) * stride + 2] += 200.0 / 255.0;
     }
-    for (var i = u32(200 - 10); i <= 200 + 10; i++) {
-        for (var j = u32(200 - 10); j <= 200 + 10; j++) {
-            if ((i - 200) * (i - 200) + (j - 200) * (j - 200) < 100) {
-                let index = (i + j * grid_size.x) * stride;
-                grid[index + 2] += 20.0 / 255.0;
+    // for (var i = u32(0); i < grid_size.x; i++) {
+    //     for (var j = u32(200 - 10); j <= 200 + 10; j++) {
+    //         let index = (i + j * grid_size.x) * stride;
+    //         grid[index + 3] = 1.0;
+    //     }
+    //     grid[(i + (grid_size.y - 200) * grid_size.x) * stride + 3] = 2.0;
+    //     grid[(i + (grid_size.y - 201) * grid_size.x) * stride + 3] = 2.0;
+    // }
+    // for (var i = u32(200 - 10); i <= 200 + 10; i++) {
+    //     for (var j = u32(200 - 10); j <= 200 + 10; j++) {
+    //         if ((i - 200) * (i - 200) + (j - 200) * (j - 200) < 100) {
+    //             let index = (i + j * grid_size.x) * stride;
+    //             grid[index + 2] += 20.0 / 255.0;
+    //         }
+    //     }
+    // }
+    if (brush[3] == -2) {
+        for (var y = u32(max(brush[1] - brush[2] + 1, 0)); y <= u32(min(brush[1] + brush[2] - 1, f32(grid_size.y) - 1)); y++) {
+            for (var x = u32(max(brush[0] - brush[2] + 1, 0)); x <= u32(min(brush[0] + brush[2] - 1, f32(grid_size.x) - 1)); x++) {
+                grid[(x + y * grid_size.x) * stride + 3] = 0;
             }
         }
     }
-    if (brush[3] == 1.0) {
+    else if (brush[3] == -1) {
+    }
+    else if (brush[3] == 0.0) {
         for (var y = u32(max(brush[1] - brush[2] + 1, 0)); y <= u32(min(brush[1] + brush[2] - 1, f32(grid_size.y) - 1)); y++) {
             for (var x = u32(max(brush[0] - brush[2] + 1, 0)); x <= u32(min(brush[0] + brush[2] - 1, f32(grid_size.x) - 1)); x++) {
                 grid[(x + y * grid_size.x) * stride + 2] += 255.0 / 255.0;
+            }
+        }
+    }
+    else {
+        for (var y = u32(max(brush[1] - brush[2] + 1, 0)); y <= u32(min(brush[1] + brush[2] - 1, f32(grid_size.y) - 1)); y++) {
+            for (var x = u32(max(brush[0] - brush[2] + 1, 0)); x <= u32(min(brush[0] + brush[2] - 1, f32(grid_size.x) - 1)); x++) {
+                grid[(x + y * grid_size.x) * stride + 3] = brush[3];
             }
         }
     }

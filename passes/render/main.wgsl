@@ -154,8 +154,32 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
         discard;
     }
     let index = (u32(new_pos.x) + u32(new_pos.y) * grid_size.x) * stride;
-    let background_color = get_background_color(new_pos);
+    var background_color = get_background_color(new_pos);
     var color = vec4<f32>(1.0, grid[index + 2], 0.0, grid[index + 2] * 5);
+    switch (u32(grid[index + 3])) {
+        case 1: {
+            background_color = vec4<f32>(0.5, 0.5, 0.5, 1.0);
+        }
+        case 2: {
+            if (u32(new_pos.x) % 2 == 0) {
+                background_color = vec4<f32>(0.6, 0.4, 0.3, 1.0);
+            }
+            else {
+                background_color = vec4<f32>(0.7, 0.5, 0.3, 1.0);
+            }
+        }
+        case 3: {
+            background_color = vec4<f32>(0.4, 0.85, 0.0, 1.0);
+        }
+        case 4: {
+            background_color = vec4<f32>(1.0, 0.8, 0.0, 1.0);
+        }
+        case 5: {
+            background_color = vec4<f32>(1.0, 1.0, 0.0, 1.0);
+        }
+        default: {
+        }
+    }
     if (color.w != 1.0) {
         color = mix(background_color, color, color.w);
         // color = mix(color, vec4<f32>(1.0, 1.0, 1.0, 1.0), color.w);

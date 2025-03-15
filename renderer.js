@@ -666,7 +666,13 @@ function resizeGrid(gridWidth, gridHeight, gridStride, chunkWidth, chunkHeight, 
     let gridArray = [];
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
-            if (Math.random() < 0.5) {
+            if (y > 200 && y < 220) {
+                gridArray.push(...[0, 0, 0, 1]);
+            }
+            else if (y > 300 && y < 320) {
+                gridArray.push(...[0, 0, 0, 2]);
+            }
+            else if (Math.random() < 0.5) {
                 gridArray.push(...[0, 0, 1, 0]);
             }
             else {
