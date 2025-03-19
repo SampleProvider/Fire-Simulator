@@ -11,7 +11,8 @@ const stride = 4;
 const scale = 65536.0;
 
 const gravity = 0.09;
-const multiplier = -2.55;
+// const multiplier = -2.55;
+// const multiplier = -10.0;
 
 fn random(input: u32) -> f32 {
     var state = input * 747796405 + 2891336453;
@@ -19,7 +20,7 @@ fn random(input: u32) -> f32 {
     return f32((word >> 22) ^ word) / 4294967296;
 }
 
-const nonsolid = array<u32, 6>(1, 0, 0, 0, 1, 1);
+const nonsolid = array<u32, 11>(1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1);
 
 @compute @workgroup_size(8, 8)
 fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
@@ -37,9 +38,11 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
     var id = grid[index + 3];
 
     if (id == 1) {
-        grid[index] = 0;
-        grid[index + 1] = 0;
-        grid[index + 2] = 0;
+        spd_x *= -1;
+        spd_y *= -1;
+        // grid[index] = 0;
+        // grid[index + 1] = 0;
+        // grid[index + 2] = 0;
     }
     else {
         if (pos.x == 0 && spd_x < 0) {
@@ -90,20 +93,26 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
             }
         }
         average /= f32(adjacent);
+        var multiplier = -10.0;
+        // var multiplier = -2.0 / sqrt(temperature);
         if (pos.x != 0) {
-            spd_x += (grid[index - stride + 2] - temperature) * multiplier;
+            // spd_x += (grid[index - stride + 2] - temperature) * multiplier;
+            spd_x += (grid[index - stride + 2] * temperature) * multiplier;
             // spd_x += (1 / grid[index - stride + 2] - 1 / temperature) * multiplier;
         }
         if (pos.x != grid_size.x - 1) {
-            spd_x -= (grid[index + stride + 2] - temperature) * multiplier;
+            // spd_x -= (grid[index + stride + 2] - temperature) * multiplier;
+            spd_x -= (grid[index + stride + 2] * temperature) * multiplier;
             // spd_x -= (1 / grid[index + stride + 2] - 1 / temperature) * multiplier;
         }
         if (pos.y != 0) {
-            spd_y += (grid[index - grid_size.x * stride + 2] - temperature) * multiplier;
+            // spd_y += (grid[index - grid_size.x * stride + 2] - temperature) * multiplier;
+            spd_y += (grid[index - grid_size.x * stride + 2] * temperature) * multiplier;
             // spd_y += (1 / grid[index - grid_size.x * stride + 2] - 1 / temperature) * multiplier;
         }
         if (pos.y != grid_size.y - 1) {
-            spd_y -= (grid[index + grid_size.x * stride + 2] - temperature) * multiplier;
+            // spd_y -= (grid[index + grid_size.x * stride + 2] - temperature) * multiplier;
+            spd_y -= (grid[index + grid_size.x * stride + 2] * temperature) * multiplier;
             // spd_y -= (1 / grid[index + grid_size.x * stride + 2] - 1 / temperature) * multiplier;
         }
 
@@ -114,16 +123,28 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
             }
         }
         if (id == 3 && temperature > 0.05) {
-            temperature += 1;
+            temperature += 2.5;
             if (random(tick * u32(scale) + index) < 0.05) {
                 grid[index + 3] = 0;
             }
         }
-        if (id == 4) {
+        if (id == 5) {
             temperature += 0.2;
         }
-        if (id == 5) {
+        if (id == 6) {
             temperature += 0.5;
+        }
+        if (id == 7) {
+            spd_x -= 0.5;
+        }
+        if (id == 8) {
+            spd_x += 0.5;
+        }
+        if (id == 9) {
+            spd_y -= 0.5;
+        }
+        if (id == 10) {
+            spd_y += 0.5;
         }
 
         // temperature = temperature * 0.8 + average * 0.2;
@@ -133,7 +154,9 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
         // temperature = max(temperature - 1.0 / 255, 0.0 / 255);
         // temperature = max(temperature - 1.0 / 255, 0.0 / 255);
         // temperature = min(temperature, 1.0);
-        temperature *= 0.95;
+        if (id != 4) {
+            temperature *= 0.95;
+        }
 
         // spd_y -= temperature * 10.0 * gravity;
         spd_y -= temperature * 1.5;
@@ -178,7 +201,7 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
     // next_grid[index + 1] = spd_y;
     // next_grid[index + 2] = temperature;
     storageBarrier();
-    if (id == 1) {
+    if (id == 100) {
         atomicStore(&next_grid[index], 0);
         atomicStore(&next_grid[index + 1], 0);
         atomicStore(&next_grid[index + 2], 0);

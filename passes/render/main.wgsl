@@ -157,6 +157,8 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
     var background_color = get_background_color(new_pos);
     var color = vec4<f32>(1.0, grid[index + 2], 0.0, grid[index + 2] * 5);
     switch (u32(grid[index + 3])) {
+        case 0: {
+        }
         case 1: {
             background_color = vec4<f32>(0.5, 0.5, 0.5, 1.0);
         }
@@ -172,12 +174,21 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
             background_color = vec4<f32>(0.4, 0.85, 0.0, 1.0);
         }
         case 4: {
-            background_color = vec4<f32>(1.0, 0.8, 0.0, 1.0);
+            background_color = vec4<f32>(0.0, 1.0, 0.2, 1.0);
         }
         case 5: {
+            background_color = vec4<f32>(1.0, 0.8, 0.0, 1.0);
+        }
+        case 6: {
             background_color = vec4<f32>(1.0, 1.0, 0.0, 1.0);
         }
         default: {
+            if (u32(new_pos.x + new_pos.y) % 2 == 0) {
+                background_color = vec4<f32>(1.0, 0.0, 1.0, 1.0);
+            }
+            else {
+                background_color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+            }
         }
     }
     if (color.w != 1.0) {

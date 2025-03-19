@@ -654,18 +654,38 @@ let pixels = [
         color: [0.4, 0.85, 0],
     },
     {
-        name: "Heater",
+        name: "Heater 0",
+        color: [1.0, 0.8, 0.0],
+    },
+    {
+        name: "Heater 1",
         color: [1.0, 0.8, 0.0],
     },
     {
         name: "Heater 2",
         color: [1.0, 1.0, 0.0],
     },
+    {
+        name: "Fan (Left)",
+        color: [1.0, 1.0, 1.0],
+    },
+    {
+        name: "Fan (Right)",
+        color: [1.0, 1.0, 1.0],
+    },
+    {
+        name: "Fan (Up)",
+        color: [1.0, 1.0, 1.0],
+    },
+    {
+        name: "Fan (Down)",
+        color: [1.0, 1.0, 1.0],
+    },
 ];
 
 let selectedDiv = null;
 
-for (let i = 0; i < pixels.length; i++) {
+for (let i = pixels.length - 1; i >= 0; i--) {
     pixelCtx.clearRect(0, 0, 48, 48);
     if (pixels[i].draw != null) {
         pixels[i].draw(pixelCtx);
