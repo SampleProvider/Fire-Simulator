@@ -93,38 +93,38 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
             }
         }
         average /= f32(adjacent);
-        var multiplier = -10.0;
+        var multiplier = -2.0;
         // var multiplier = -2.0 / sqrt(temperature);
         if (pos.x != 0) {
-            // spd_x += (grid[index - stride + 2] - temperature) * multiplier;
-            spd_x += (grid[index - stride + 2] * temperature) * multiplier;
+            spd_x += (grid[index - stride + 2] - temperature) * multiplier;
+            // spd_x += (grid[index - stride + 2] * temperature) * multiplier;
             // spd_x += (1 / grid[index - stride + 2] - 1 / temperature) * multiplier;
         }
         if (pos.x != grid_size.x - 1) {
-            // spd_x -= (grid[index + stride + 2] - temperature) * multiplier;
-            spd_x -= (grid[index + stride + 2] * temperature) * multiplier;
+            spd_x -= (grid[index + stride + 2] - temperature) * multiplier;
+            // spd_x -= (grid[index + stride + 2] * temperature) * multiplier;
             // spd_x -= (1 / grid[index + stride + 2] - 1 / temperature) * multiplier;
         }
         if (pos.y != 0) {
-            // spd_y += (grid[index - grid_size.x * stride + 2] - temperature) * multiplier;
-            spd_y += (grid[index - grid_size.x * stride + 2] * temperature) * multiplier;
+            spd_y += (grid[index - grid_size.x * stride + 2] - temperature) * multiplier;
+            // spd_y += (grid[index - grid_size.x * stride + 2] * temperature) * multiplier;
             // spd_y += (1 / grid[index - grid_size.x * stride + 2] - 1 / temperature) * multiplier;
         }
         if (pos.y != grid_size.y - 1) {
-            // spd_y -= (grid[index + grid_size.x * stride + 2] - temperature) * multiplier;
-            spd_y -= (grid[index + grid_size.x * stride + 2] * temperature) * multiplier;
+            spd_y -= (grid[index + grid_size.x * stride + 2] - temperature) * multiplier;
+            // spd_y -= (grid[index + grid_size.x * stride + 2] * temperature) * multiplier;
             // spd_y -= (1 / grid[index + grid_size.x * stride + 2] - 1 / temperature) * multiplier;
         }
 
         if (id == 2 && temperature > 0.1) {
             temperature += 0.5;
-            if (random(tick * u32(scale) + index) < 0.01) {
+            if (random(tick * u32(scale) + index) < 0.01 * temperature) {
                 grid[index + 3] = 0;
             }
         }
         if (id == 3 && temperature > 0.05) {
             temperature += 2.5;
-            if (random(tick * u32(scale) + index) < 0.05) {
+            if (random(tick * u32(scale) + index) < 0.005) {
                 grid[index + 3] = 0;
             }
         }
@@ -148,14 +148,14 @@ fn compute_main(@builtin(global_invocation_id) pos1: vec3<u32>) {
         }
 
         // temperature = temperature * 0.8 + average * 0.2;
-        temperature = temperature * 0.5 + average * 0.5;
+        // temperature = temperature * 0.5 + average * 0.5;
         // temperature = average;
 
         // temperature = max(temperature - 1.0 / 255, 0.0 / 255);
-        // temperature = max(temperature - 1.0 / 255, 0.0 / 255);
+        temperature = max(temperature - 1.0 / 255, 0.0 / 255);
         // temperature = min(temperature, 1.0);
         if (id != 4) {
-            temperature *= 0.95;
+            //temperature *= 0.95;
         }
 
         // spd_y -= temperature * 10.0 * gravity;
